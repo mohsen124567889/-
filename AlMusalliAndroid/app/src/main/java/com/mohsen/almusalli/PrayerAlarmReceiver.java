@@ -35,6 +35,7 @@ public class PrayerAlarmReceiver extends BroadcastReceiver {
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setOngoing(true)
                 .setAutoCancel(false)
+                .setTimeoutAfter(60_000L)
                 .setFullScreenIntent(fullPi, true)
                 .setContentIntent(fullPi)
                 .addAction(android.R.drawable.ic_menu_view, "ردّ", answerPi)
@@ -43,7 +44,6 @@ public class PrayerAlarmReceiver extends BroadcastReceiver {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         manager.notify(name.hashCode(), builder.build());
 
-        // Keep a fallback reminder scheduled; the timetable in the app refreshes the exact times.
         AlarmScheduler.schedule(context, name, System.currentTimeMillis() + 24L * 60L * 60L * 1000L);
     }
 }
