@@ -1,1 +1,18 @@
-{"name":"المُصلّي","short_name":"المُصلّي","start_url":"./","display":"standalone","background_color":"#07130f","theme_color":"#07130f","lang":"ar","dir":"rtl","icons":[]}
+{
+  "name": "رِفاء | مياه الشرب والتوصيل",
+  "short_name": "رِفاء",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5fafb",
+  "theme_color": "#087f9b",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
