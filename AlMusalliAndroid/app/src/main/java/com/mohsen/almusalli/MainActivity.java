@@ -4,12 +4,13 @@ import android.Manifest;
 import android.app.*;
 import android.content.*;
 import android.content.pm.PackageManager;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.*;
 import android.provider.Settings;
 import android.webkit.*;
 import android.view.*;
-import android.widget.*;
 import java.util.Calendar;
 
 public class MainActivity extends Activity {
@@ -38,10 +39,17 @@ public class MainActivity extends Activity {
     }
     private void createChannel() {
         if (Build.VERSION.SDK_INT >= 26) {
-            NotificationChannel c = new NotificationChannel("prayer_alerts", "تنبيهات الصلاة", NotificationManager.IMPORTANCE_HIGH);
-            c.setDescription("تنبيه عند دخول وقت الصلاة");
+            NotificationChannel c = new NotificationChannel("prayer_alerts_v2", "تنبيهات الصلاة والمكالمة", NotificationManager.IMPORTANCE_HIGH);
+            c.setDescription("مكالمة تذكير عند دخول وقت الصلاة");
             c.enableVibration(true);
             c.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            Uri alarmTone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmTone == null) alarmTone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            AudioAttributes attrs = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+            c.setSound(alarmTone, attrs);
             ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(c);
         }
     }
