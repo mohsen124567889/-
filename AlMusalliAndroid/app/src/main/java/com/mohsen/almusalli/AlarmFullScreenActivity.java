@@ -182,7 +182,9 @@ public class AlarmFullScreenActivity extends Activity {
 
     private void startAlarmTone() {
         try {
-            Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            String chosen = getSharedPreferences("prayer_audio", MODE_PRIVATE).getString("adhan_uri", null);
+            Uri sound = chosen == null ? null : Uri.parse(chosen);
+            if (sound == null) sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
             if (sound == null) sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
             ringtone = RingtoneManager.getRingtone(this, sound);
             if (ringtone != null) {
