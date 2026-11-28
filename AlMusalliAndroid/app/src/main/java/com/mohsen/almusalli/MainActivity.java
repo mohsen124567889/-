@@ -70,12 +70,28 @@ public class MainActivity extends Activity {
             try { startActivity(new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:"+getPackageName()))); } catch(Exception ignored) {}
         }
     }
+    private static final int PICK_ADHAN_AUDIO = 73;
+    private void pickAdhanAudio() {
+        Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        pick.setType("audio/*");
+        pick.addCategory(Intent.CATEGORY_OPENABLE);
+        try { startActivityForResult(pick, PICK_ADHAN_AUDIO); } catch (Exception ignored) { }
+    }
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_ADHAN_AUDIO && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri uri = data.getData();
+            try { getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION); } catch (Exception ignored) { }
+            getSharedPreferences("prayer_audio", MODE_PRIVATE).edit().putString("adhan_uri", uri.toString()).apply();
+        }
+    }
     public class NativeBridge {
         @JavascriptInterface public void schedulePrayer(String name, long whenMillis) {
             AlarmScheduler.schedule(MainActivity.this, name, whenMillis);
         }
         @JavascriptInterface public void cancelPrayer(String name) { AlarmScheduler.cancel(MainActivity.this, name); }
         @JavascriptInterface public void openAlarmSettings() { runOnUiThread(() -> requestExactAlarmPermission()); }
+        @JavascriptInterface public void pickAdhanAudio() { runOnUiThread(() -> MainActivity.this.pickAdhanAudio()); }
         @JavascriptInterface public String platformVersion() { return "Android " + Build.VERSION.RELEASE; }
         @JavascriptInterface public void keepScreenOn(boolean enabled) {
             runOnUiThread(() -> { if(enabled) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); });
