@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function hasUser() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function role(r) { return hasUser() && userDoc().data.role == r; }
+    function admin() { return role('admin'); }
+    function driver() { return role('driver'); }
+    function customer() { return role('customer'); }
+
+    match /users/{uid} {
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.role == 'customer'
+        && request.resource.data.keys().hasOnly(['uid','name','email','phone','role','createdAt']);
+      allow read: if signedIn() && (request.auth.uid == uid || admin());
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','phone','updatedAt']);
+      allow update, delete: if admin();
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if admin();
+    }
+
+    match /orders/{orderId} {
+      allow create: if customer()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly([
+          'customerId','customerName','customerEmail','customerPhone','customerType',
+          'address','city','district','notes','items','subtotal','deliveryFee','total',
+          'paymentMethod','status','driverId','driverName','createdAt','updatedAt'
+        ]);
+      allow read: if admin()
+        || (signedIn() && resource.data.customerId == request.auth.uid)
+        || (driver() && resource.data.driverId == request.auth.uid);
+      allow update: if admin()
+        || (driver() && resource.data.driverId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','deliveryNote','updatedAt','deliveredAt']));
+      allow delete: if admin();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if admin();
+    }
+  }
+}

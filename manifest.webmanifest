@@ -1,18 +1,10 @@
 {
-  "name": "رِفاء | مياه الشرب والتوصيل",
+  "name": "رِفاء - مياه الشرب والتوصيل",
   "short_name": "رِفاء",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f5fafb",
-  "theme_color": "#087f9b",
-  "icons": [
-    {
-      "src": "assets/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+  "background_color": "#f4fafb",
+  "theme_color": "#087f9b"
 }
