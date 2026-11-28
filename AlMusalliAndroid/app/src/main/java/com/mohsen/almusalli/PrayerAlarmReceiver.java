@@ -43,13 +43,7 @@ public class PrayerAlarmReceiver extends BroadcastReceiver {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         manager.notify(name.hashCode(), builder.build());
 
-        try {
-            context.startActivity(new Intent(context, AlarmFullScreenActivity.class)
-                    .putExtra("prayer", name)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
-        } catch (Exception ignored) { }
-
-        // Keep the next reminder scheduled; the app refreshes exact prayer times whenever it updates the timetable.
+        // Keep a fallback reminder scheduled; the timetable in the app refreshes the exact times.
         AlarmScheduler.schedule(context, name, System.currentTimeMillis() + 24L * 60L * 60L * 1000L);
     }
 }
