@@ -4,12 +4,13 @@ import android.Manifest;
 import android.app.*;
 import android.content.*;
 import android.content.pm.PackageManager;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.*;
 import android.provider.Settings;
 import android.webkit.*;
 import android.view.*;
-import android.widget.*;
 import java.util.Calendar;
 
 public class MainActivity extends Activity {
@@ -38,10 +39,17 @@ public class MainActivity extends Activity {
     }
     private void createChannel() {
         if (Build.VERSION.SDK_INT >= 26) {
-            NotificationChannel c = new NotificationChannel("prayer_alerts", "تنبيهات الصلاة", NotificationManager.IMPORTANCE_HIGH);
-            c.setDescription("تنبيه عند دخول وقت الصلاة");
+            NotificationChannel c = new NotificationChannel("prayer_alerts_v2", "تنبيهات الصلاة والمكالمة", NotificationManager.IMPORTANCE_HIGH);
+            c.setDescription("مكالمة تذكير عند دخول وقت الصلاة");
             c.enableVibration(true);
             c.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            Uri alarmTone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmTone == null) alarmTone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            AudioAttributes attrs = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+            c.setSound(alarmTone, attrs);
             ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(c);
         }
     }
@@ -62,12 +70,28 @@ public class MainActivity extends Activity {
             try { startActivity(new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:"+getPackageName()))); } catch(Exception ignored) {}
         }
     }
+    private static final int PICK_ADHAN_AUDIO = 73;
+    private void pickAdhanAudio() {
+        Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        pick.setType("audio/*");
+        pick.addCategory(Intent.CATEGORY_OPENABLE);
+        try { startActivityForResult(pick, PICK_ADHAN_AUDIO); } catch (Exception ignored) { }
+    }
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_ADHAN_AUDIO && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri uri = data.getData();
+            try { getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION); } catch (Exception ignored) { }
+            getSharedPreferences("prayer_audio", MODE_PRIVATE).edit().putString("adhan_uri", uri.toString()).apply();
+        }
+    }
     public class NativeBridge {
         @JavascriptInterface public void schedulePrayer(String name, long whenMillis) {
             AlarmScheduler.schedule(MainActivity.this, name, whenMillis);
         }
         @JavascriptInterface public void cancelPrayer(String name) { AlarmScheduler.cancel(MainActivity.this, name); }
         @JavascriptInterface public void openAlarmSettings() { runOnUiThread(() -> requestExactAlarmPermission()); }
+        @JavascriptInterface public void pickAdhanAudio() { runOnUiThread(() -> MainActivity.this.pickAdhanAudio()); }
         @JavascriptInterface public String platformVersion() { return "Android " + Build.VERSION.RELEASE; }
         @JavascriptInterface public void keepScreenOn(boolean enabled) {
             runOnUiThread(() -> { if(enabled) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); });
